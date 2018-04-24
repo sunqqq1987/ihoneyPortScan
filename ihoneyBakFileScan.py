@@ -87,7 +87,9 @@ def dispatcher(url_file=None, url=None, max_thread=1, dic=None):
         current_info_dic.extend([u.replace('.', '') + '.rar', u.replace('.', '') + '.zip'])
         current_info_dic.extend([wwwhost + '.rar', wwwhost + '.zip'])
         current_info_dic.extend([u.split('.', 1)[-1] + '.rar', u.split('.', 1)[-1] + '.zip'])
-        # print(current_info_dic)
+        current_info_dic.extend([www1[0] + '.rar', www1[0] + '.zip'])
+        current_info_dic.extend([www1[1] + '.rar', www1[1] + '.zip'])
+        # [print(i) for i in current_info_dic]
         """ 最终每个url对应可以扫描的字典部分如下
         ['web.rar', 'web.zip', 'backup.rar', 'www.rar', 'bak.rar', 'wwwroot.zip', 'bak.zip', 'www.zip', 'wwwroot.rar', 'backup.zip', 'www.test.gov.cn.rar', 'www.test.gov.cn.zip', 'wwwtestgovcn.rar', 'wwwtestgovcn.zip', 'testgovcn.rar', 'testgovcn.zip', 'test.gov.cn.rar', 'test.gov.cn.zip']
         ['web.rar', 'web.zip', 'backup.rar', 'www.rar', 'bak.rar', 'wwwroot.zip', 'bak.zip', 'www.zip', 'wwwroot.rar', 'backup.zip', 'www.baidu.com.rar', 'www.baidu.com.zip', 'wwwbaiducom.rar', 'wwwbaiducom.zip', 'baiducom.rar', 'baiducom.zip', 'baidu.com.rar', 'baidu.com.zip']
