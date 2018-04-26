@@ -25,18 +25,22 @@ class BakScan(Thread):
         try:
             r = requests.get(url=url, headers=self.headers, timeout=self.timeout, allow_redirects=False, stream=True, verify=False)
             # 验证压缩包文件头10个字节，rar固定头16进制为:526172211a0700cf9073  zip为:504b0304140000000800
+            # mysql导出的头几个字节是：-- MySQL dump:2d2d204d7953514c
+            # phpmyadmin导出的头几个字节是：-- phpMyAdmin SQL Dump:  2d2d207068704d794164
+            # navicat导出的头几个字节是：/* Navicat :  2f2a0a204e617669636174 2d2d207068704d794164
+            #    .sql为2d2d20或2f2a0a204e617669636174（非100%确定）
             content = b2a_hex(r.raw.read(10)).decode()
             if r.status_code == 200:
                 rarsize = int(r.headers.get('Content-Length')) // 1024 // 1024
-                if content.startswith('526172') or content.startswith('504b03'):
+                if content.startswith('526172') or content.startswith('504b03') or content.startswith('2d2d204d7953514c') or content.startswith('2d2d207068704d794164') or content.startswith('2f2a0a204e6176696361'):
                     logging.warning('[*] {}  size:{}M'.format(url, rarsize))
                     with open('success.txt', 'a') as f:
                         try:
-                            f.write(str(url) + '\n')
+                            f.write(str(url) + '  ' + 'size:' + str(rarsize) + 'M' + '\n')
                         except:
                             pass
-            else:  # 如果你只想看扫描成功的备份地址就注释这行和下一行
-                logging.warning('[ ] {}'.format(url))
+            # else:  # 如果你只想看扫描成功的备份地址就注释这行和下一行
+            #     logging.warning('[ ] {}'.format(url))
         except Exception as e:
             pass
 
@@ -54,13 +58,13 @@ def dispatcher(url_file=None, url=None, max_thread=1, dic=None):
     if url_file is not None and url is None:
         with open(str(url_file)) as f:
             while True:
-                line = str(f.readline()).strip()
+                line = str(f.readline()).strip().strip('http://').strip('https://').rstrip('/')
                 if line:
                     urllist.append(line)
                 else:
                     break
     elif url is not None and url_file is None:
-        urllist.append(url)
+        urllist.append(url.strip().strip('http://').strip('https://').rstrip('/'))
     else:
         pass
 
@@ -83,12 +87,12 @@ def dispatcher(url_file=None, url=None, max_thread=1, dic=None):
             wwwhost += www1[i]
 
         current_info_dic = deepcopy(dic)  # 深拷贝
-        current_info_dic.extend([u + '.rar', u + '.zip'])
-        current_info_dic.extend([u.replace('.', '') + '.rar', u.replace('.', '') + '.zip'])
-        current_info_dic.extend([wwwhost + '.rar', wwwhost + '.zip'])
-        current_info_dic.extend([u.split('.', 1)[-1] + '.rar', u.split('.', 1)[-1] + '.zip'])
-        current_info_dic.extend([www1[0] + '.rar', www1[0] + '.zip'])
-        current_info_dic.extend([www1[1] + '.rar', www1[1] + '.zip'])
+        current_info_dic.extend([u + '.rar', u + '.sql',  u + '.zip'])
+        current_info_dic.extend([u.replace('.', '') + '.rar', u.replace('.', '') + '.zip', u.replace('.', '') + '.sql'])
+        current_info_dic.extend([wwwhost + '.rar', wwwhost + '.zip', wwwhost + '.sql'])
+        current_info_dic.extend([u.split('.', 1)[-1] + '.rar', u.split('.', 1)[-1] + '.zip', u.split('.', 1)[-1] + '.sql'])
+        current_info_dic.extend([www1[0] + '.rar', www1[0] + '.zip', www1[0] + '.sql'])
+        current_info_dic.extend([www1[1] + '.rar', www1[1] + '.zip', www1[1] + '.sql'])
         # [print(i) for i in current_info_dic]
         """ 最终每个url对应可以扫描的字典部分如下
         ['web.rar', 'web.zip', 'backup.rar', 'www.rar', 'bak.rar', 'wwwroot.zip', 'bak.zip', 'www.zip', 'wwwroot.rar', 'backup.zip', 'www.test.gov.cn.rar', 'www.test.gov.cn.zip', 'wwwtestgovcn.rar', 'wwwtestgovcn.zip', 'testgovcn.rar', 'testgovcn.zip', 'test.gov.cn.rar', 'test.gov.cn.zip']
@@ -132,7 +136,7 @@ if __name__ == '__main__':
     # 如果想使用这个脚本的默认扫描字典，请取消注释下一行注释
     info_dic = ['bak.rar', 'bak.zip', 'backup.rar', 'backup.zip', 'www.zip', 'www.rar', 'web.rar', 'web.zip', 'wwwroot.rar', 'wwwroot.zip', ]
     # 如果想从文件中自定义字典请取消下一行注释并注释上一行
-    # info_dic = list(set([i.replace("\n", "") for i in open("dic.txt", "r").readlines()]))
+    # info_dic = list(set([i.replace("\n", "") for i in open("bigdic.txt", "r").readlines()]))
 
     try:
         if args.url:
